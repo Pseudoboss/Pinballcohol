@@ -2,8 +2,9 @@ import gpiozero as gpio
 import asyncio
 import time
 
-interrupt_pin = 2
-code_pins = [3, 4, 17, 27, 22, 10, 9, 11, 0, 5, 6, 13, 19, 26]
+interrupt_pin = 3
+master_pin = 2
+code_pins = [4, 17, 27, 22, 10, 9, 11, 0, 5, 6, 13, 19, 26]
 
 class GameController():
     ''' Monitors and responds to changes in game state. 
@@ -20,7 +21,7 @@ class GameController():
             code_pins: List of input code pins, from smallest to largest.
         '''
         self.interrupt = self.set_interrupt(interrupt_pin)
-        self.master = set_master(master_pin)
+        self.master = self.set_master(master_pin)
         self.elements = self.set_elements(code_pins)
 
     def set_master(self, master_pin):
@@ -34,7 +35,7 @@ class GameController():
         '''
 
         button = gpio.Button(interrupt_pin)
-        button.when_pressed = on_interrupt
+        button.when_pressed = self.on_interrupt
         return button
 
     def set_elements(self, code_pins):
@@ -43,28 +44,28 @@ class GameController():
 
         elements = {}
         for i, pin in enumerate(code_pins):
-            bumper = gpio.Button(pin, pull_up = False)
-            bumpers[bumper] = 2**i
+            element = gpio.Button(pin, pull_up = False)
+            elements[element] = 2**i
         return elements
 
     def on_interrupt(self):
         '''called whenever the interrupt pin goes high.'''
 
         time.sleep(0.001)
-        read_bumpers()
+        read_element_code()
 
     def read_element_code(self):
         ''' Read the encoded bumper number from the bumper pins.
         '''
 
-        return sum([v for k, v in self.bumpers if k.is_pressed])
+        return sum([v for k, v in self.elements if k.is_pressed])
 
 class Bumper():
     ''' Bumper game element.
     '''
 
     def __init__(self, gc, name, element_code, pump):
-        ''' initialize the Bumper.
+        ''' initialize a new Bumper.
         
         arguments: 
             gc: The primary GameController.
@@ -76,6 +77,8 @@ class Bumper():
         self.name = name
         self.element_code = element_code
         self.pump = pump
+        if self.element_code in gc.elements.keys():
+            raise ValueError('element_code must be unique.')
         gc.elements[self.element_code] = self        
 
     def on_hit(self):
@@ -101,12 +104,15 @@ class Pump():
         self.pin = gpio.LED(pin)
         self.run_time = run_time
 
-    def run(self, run_time = self.run_time):
+    def run(self, run_time = None):
         ''' Run the pump for run_time seconds.
+
+        arguments:
+            run_time: The time that the pump should run for before turning off.
         '''
-
-        pass
-
+        if run_time == None: 
+            run_time = self.run_time
+        
     @property
     def is_running(self):
         ''' Whether the pump is running or not.
@@ -116,10 +122,14 @@ class Pump():
 
 class DrinkController():
     ''' The drink controller. Manages drink mixing and pouring.
+        There should only be one DrinkController at a time. 
     '''
 
     def __init__(self):
         self.drinks = {}
+
+    def pour_drink(self, drink):
+        pass
 
 class Drink():
     ''' Drink class. Defines a specific drink and its components.
@@ -140,14 +150,11 @@ class Drink():
         self.drink_dict = drink_dict
         dc.drinks[self.name] = drink_dict
 
-game_controller = GameController(interrupt_pin, code_pins)
+game_controller = GameController(interrupt_pin, master_pin, code_pins)
 drink_controller = DrinkController()
-
-interrupt_pin = 2
-self.bumpers = [3, 4, 17, 27, 22, 10, 9, 11, 0, 5, 6, 13, 19, 26]
     
-bumper1 = Bumper('vodka', 27, 17, loop)
-bumper2 = Bumper('rum', 6, 5, loop)
+bumper1 = Bumper(game_controller, 'vodka', 27, 17)
+bumper2 = Bumper(game_controller, 'rum', 6, 5)
 
 print('starting up.')
 
