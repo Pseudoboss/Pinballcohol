@@ -55,7 +55,7 @@ class GameController():
         read_element_code()
 
     def read_element_code(self):
-        ''' Read the encoded bumper number from the bumper pins.
+        ''' Read the encoded element number from the element pins.
         '''
 
         return sum([v for k, v in self.elements if k.is_pressed])
@@ -100,6 +100,7 @@ class Pump():
             pin: Pin the pump is attached to.
             run_time: Default run time for each hit.
         '''
+
         self.name = name
         self.pin = gpio.LED(pin)
         self.run_time = run_time
@@ -110,15 +111,39 @@ class Pump():
         arguments:
             run_time: The time that the pump should run for before turning off.
         '''
+
         if run_time == None: 
             run_time = self.run_time
-        
-    @property
-    def is_running(self):
-        ''' Whether the pump is running or not.
+        self._start()
+        self.call_later(run_time, self._stop)
+    
+    def _start(self):
+        ''' Internal use only. 
+            Start the physcal pump running.
         '''
 
-        pass
+        if not self.is_running:
+            self.pin.on()
+        else: 
+            raise PumpError("Pump must be off to call 'start'.")
+    
+    def _stop(self):
+        ''' Internal use only.
+            stop the physical pump running. 
+        ''' 
+
+        if self.is_running:
+            self.pin.off()
+        else:
+            raise PumpError("pump must be on to call 'stop'.")
+       
+    @property
+    def is_running(self):
+        ''' True if the pump is running. False otherwise.
+        '''
+
+        return self.pin.is_lit
+
 
 class DrinkController():
     ''' The drink controller. Manages drink mixing and pouring.
@@ -128,8 +153,14 @@ class DrinkController():
     def __init__(self):
         self.drinks = {}
 
+        self.score = 0
+        self.rum = 0
+        self.vodka = 0
+        self.gin = 0
+
     def pour_drink(self, drink):
         pass
+
 
 class Drink():
     ''' Drink class. Defines a specific drink and its components.
@@ -149,6 +180,7 @@ class Drink():
         self.name = name
         self.drink_dict = drink_dict
         dc.drinks[self.name] = drink_dict
+
 
 game_controller = GameController(interrupt_pin, master_pin, code_pins)
 drink_controller = DrinkController()
