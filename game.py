@@ -1,3 +1,5 @@
+#! /usr/bin/python3 
+
 import gpiozero as gpio
 import asyncio
 import time
@@ -5,6 +7,10 @@ import time
 interrupt_pin = 3
 master_pin = 2
 code_pins = [4, 17, 27, 22, 10, 9, 11, 0, 5, 6, 13, 19, 26]
+
+max_pour_time = 10
+min_pour_time = 1
+pour_coef = 1/10000
 
 class GameController():
     ''' Monitors and responds to changes in game state. 
@@ -64,7 +70,7 @@ class Bumper():
     ''' Bumper game element.
     '''
 
-    def __init__(self, gc, name, element_code, pump):
+    def __init__(self, gc, name, element_code):
         ''' initialize a new Bumper.
         
         arguments: 
@@ -74,6 +80,7 @@ class Bumper():
                           when the bumper has been hit.
             pump: The pump to run when the bumper has been hit.
         '''
+
         self.name = name
         self.element_code = element_code
         self.pump = pump
@@ -150,17 +157,35 @@ class DrinkController():
         There should only be one DrinkController at a time. 
     '''
 
-    def __init__(self):
-        self.drinks = {}
-
+    def __init__(self, max_pour_time, min_pour_time, pour_coef):
+        ''' Instantiate a new DrinkController.
+        
+        arguments: 
+            max_pour_time: Max pour time to prevent overflowing.
+            min_pour_time: Min pour time, to prevent disappointment. 
+            pour_coef: Pour coefficient to determine how score 
+                       goes to pour time.
+        '''
         self.score = 0
-        self.rum = 0
-        self.vodka = 0
-        self.gin = 0
+        drink_scores = {}
 
-    def pour_drink(self, drink):
-        pass
+        self.max_pour_time = max_pour_time
+        self.min_pour_time = min_pour_time
+        self.pour_coef = pour_coef
+        pour_time = self.score*self.pour_coef
+        pour_time = sorted([self.min_pour_time, 
+                            pour_time, 
+                            self.max_pour_time])[1]
+        drink.pour(pour_time)
 
+    def determine_drink(self):
+        winning_drink = None
+        winning_score = 0
+        for drink, score in self.drink_scores:
+            if score > winning_score:
+                winning_drink = drink
+                winning_score = score
+        self.pour_drink(winning_drink)
 
 class Drink():
     ''' Drink class. Defines a specific drink and its components.
@@ -179,11 +204,24 @@ class Drink():
 
         self.name = name
         self.drink_dict = drink_dict
-        dc.drinks[self.name] = drink_dict
+        dc.drink_scores[self] = 0
 
+    @property
+    def drink_dict(self):
+        ''' Dictionary with pumps and ingredients. Values have been normalized.
+        '''
+        return self._drink_dict
+    
+    @drink_dict.setter
+    def drink_dict(self, value):
+        # Normalize the values in value to 1. 
+        total = sum(value.values())
+        for k, v in value:
+            value[k] = v/total
+        self._drink_dict = value
 
 game_controller = GameController(interrupt_pin, master_pin, code_pins)
-drink_controller = DrinkController()
+drink_controller = DrinkController(max_pour_time, min_pour_time, pour_coef)
     
 bumper1 = Bumper(game_controller, 'vodka', 27, 17)
 bumper2 = Bumper(game_controller, 'rum', 6, 5)

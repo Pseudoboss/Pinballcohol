@@ -1,11 +1,7 @@
-#!/usr/bin/python
+#! /usr/bin/python3
 
-try:
-    # for Python2
-    from Tkinter import *   ## notice capitalized T in Tkinter 
-except ImportError:
-    # for Python3
-    from tkinter import *   ## notice lowercase 't' in tkinter here
+from signal import pause
+from tkinter import * 
    
 def ScoreOutput( param, displayLength ):
     return "0" * (displayLength - len(str(param))) + str(param)
@@ -47,13 +43,20 @@ root=Tk()
 root.attributes("-fullscreen", True)
 root.title("ROBOEXOTICA")
 root.configure(background='black')
-roboLabel = Label(root, text="ROBOEXOTICA", font=(titleFont, largeFontSize, 'bold'), background='black', fg = mainColor, pady = 100)
+roboLabel = Label(root, text="ROBOEXOTICA", 
+                  font=(titleFont, largeFontSize, 'bold'), 
+                  background='black', fg = mainColor, 
+                  pady = 100)
 roboLabel.pack()
 
-scoreLabel = Label(root, text="Total Score:", font=(mainFont, 28), background='black', fg = mainColor)
-vodkaLabel = Label(root, text="VODKA", font=(mainFont, smallFontSize), background='black', fg = mainColor)
-rumLabel = Label(root, text="RUM", font=(mainFont, smallFontSize), background='black', fg = mainColor)
-whiskeyLabel = Label(root, text="WHISKEY", font=(mainFont, smallFontSize), background='black', fg = mainColor)
+scoreLabel = Label(root, text="Total Score:", font=(mainFont, 28), 
+                   background='black', fg = mainColor)
+vodkaLabel = Label(root, text="VODKA", font=(mainFont, smallFontSize), 
+                   background='black', fg = mainColor)
+rumLabel = Label(root, text="RUM", font=(mainFont, smallFontSize), 
+                 background='black', fg = mainColor)
+whiskeyLabel = Label(root, text="WHISKEY", font=(mainFont, smallFontSize), 
+                     background='black', fg = mainColor)
 
 scoreLabel.place(x=450 + xOffset, y=450 + yOffset)
 vodkaLabel.place(x=300 + xOffset, y=lowerYPosLabel + yOffset)
@@ -61,22 +64,27 @@ rumLabel.place(x=860 + xOffset, y=lowerYPosLabel + yOffset)
 whiskeyLabel.place(x=1250 + xOffset, y=lowerYPosLabel + yOffset)
 
 scoreText = Text(root)
-scoreText.configure(background='black', fg = mainColor, font=(mainFont, smallFontSize + 20), width=8, height=1)
+scoreText.configure(background='black', fg = mainColor, 
+                    font=(mainFont, smallFontSize + 20), width=8, height=1)
 scoreText.place(x=670 + xOffset, y=420 + yOffset)
 
 vodkaText = Text(root)
-vodkaText.configure(background='black', fg = mainColor, font=(mainFont, smallFontSize), width=2, height=1)
+vodkaText.configure(background='black', fg = mainColor, 
+                    font=(mainFont, smallFontSize), width=2, height=1)
 vodkaText.place(x=400 + xOffset, y=lowerYPosText + yOffset)
 
 rumText = Text(root)
-rumText.configure(background='black', fg = mainColor, font=(mainFont, smallFontSize), width=2, height=1)
+rumText.configure(background='black', fg = mainColor, 
+                  font=(mainFont, smallFontSize), width=2, height=1)
 rumText.place(x=900 + xOffset, y=lowerYPosText + yOffset)
 
 whiskeyText = Text(root)
-whiskeyText.configure(background='black', fg = mainColor, font=(mainFont, smallFontSize), width=2, height=1)
+whiskeyText.configure(background='black', fg = mainColor, 
+                      font=(mainFont, smallFontSize), width=2, height=1)
 whiskeyText.place(x=1350 + xOffset, y=lowerYPosText + yOffset)
 
 UpdateTotalScore(0)
 UpdateVodkaScore(0)
 UpdateRumScore(0)
 UpdateWhiskeyScore(0)
+pause()
